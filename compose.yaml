@@ -1,0 +1,63 @@
+name: secureshare
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PGDATABASE}
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [backend]
+  api:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      postgres: {condition: service_healthy}
+      node_a: {condition: service_started}
+      node_b: {condition: service_started}
+    ports: ["127.0.0.1:8000:8000"]
+    volumes:
+      - ./keys:/srv/secureshare/keys:ro
+      - ./certs:/srv/secureshare/certs:ro
+    networks: [backend]
+  node_a:
+    build: .
+    env_file: .env
+    environment:
+      NODE_ID: node_a
+      STORAGE_DIR: /srv/secureshare/storage/node_a
+    command: ["uvicorn", "app.storage_node:app", "--host", "0.0.0.0", "--port", "8001", "--ssl-keyfile", "certs/server.key", "--ssl-certfile", "certs/server.pem"]
+    restart: unless-stopped
+    ports: ["127.0.0.1:8001:8001"]
+    volumes:
+      - ./certs:/srv/secureshare/certs:ro
+      - node_a_data:/srv/secureshare/storage/node_a
+    networks: [backend]
+  node_b:
+    build: .
+    env_file: .env
+    environment:
+      NODE_ID: node_b
+      STORAGE_DIR: /srv/secureshare/storage/node_b
+    command: ["uvicorn", "app.storage_node:app", "--host", "0.0.0.0", "--port", "8002", "--ssl-keyfile", "certs/server.key", "--ssl-certfile", "certs/server.pem"]
+    restart: unless-stopped
+    ports: ["127.0.0.1:8002:8002"]
+    volumes:
+      - ./certs:/srv/secureshare/certs:ro
+      - node_b_data:/srv/secureshare/storage/node_b
+    networks: [backend]
+networks:
+  backend:
+    internal: false # API is exposed ONLY through loopback port binding
+volumes:
+  postgres_data:
+  node_a_data:
+  node_b_data:

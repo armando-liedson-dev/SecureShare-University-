@@ -1,0 +1,52 @@
+# Segredos e configurações locais
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+!keys/.gitkeep
+!certs/.gitkeep
+keys/*
+certs/*
+!keys/.gitkeep
+!certs/.gitkeep
+
+# Dados gerados e conteúdos privados
+storage/*
+!storage/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+*.bak
+*.log
+*.zip
+
+# Ficheiros locais de ferramentas
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Exportações temporárias e capturas locais que possam conter dados privados
+local-data/
+private/
+secrets/
+logs/

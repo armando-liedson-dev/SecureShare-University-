@@ -1,0 +1,242 @@
+SECURESHARE — DOCUMENTO-MESTRE ATUALIZADO
+Proposta, base do relatório científico e roteiro da apresentação
+ISUTC | Engenharia e Ciência da Computação | Sistemas Distribuídos e Paralelos | 2026
+Estado: versão de trabalho, atualizada com observações reais de execução (12/10/2026)
+
+TÍTULO
+SecureShare — Sistema Distribuído de Partilha Segura de Documentos com Controlo de Acesso, Replicação e Tolerância a Falhas em Instituições Universitárias
+
+NOTA METODOLÓGICA IMPORTANTE
+Este documento integra (A) a proposta científica, (B) os mecanismos identificados no código, (C) os resultados efetivamente observados no computador do grupo e (D) testes pendentes. A presença de uma funcionalidade no código não equivale, por si só, à sua validação integral.
+Legenda: [PROPOSTA] requisito ou resultado esperado; [CÓDIGO] identificado no repositório; [TESTE LOCAL] teste isolado realizado na preparação da versão; [OBSERVADO] evidência enviada pelo grupo no VS Code/navegador; [PENDENTE] ainda não comprovado na execução integrada.
+Não divulgar senhas de demonstração, ficheiros .env, chaves privadas, dados reais nem capturas com credenciais.
+
+PARTE A — PROPOSTA CIENTÍFICA
+
+1. INTRODUÇÃO E CONTEXTUALIZAÇÃO
+Em instituições universitárias, o Registo Académico, a Direcção Pedagógica, os Recursos Humanos, as Finanças e outros departamentos partilham documentos para realizar tarefas administrativas e académicas. Pautas, declarações, relatórios, contratos e comprovativos podem circular por canais diversos e ficar armazenados em dispositivos e serviços distintos. Esta diversidade pode dificultar a aplicação uniforme de permissões, a identificação das versões corretas, a consulta dos registos de acesso e a disponibilidade dos ficheiros quando um servidor falha.
+
+O SecureShare é um protótipo académico de partilha documental por utilizadores e departamentos, construído sobre serviços independentes ligados por rede. Combina uma interface web, uma API, uma base de dados relacional e dois nós de armazenamento. A arquitetura permite estudar segurança distribuída, transparência de localização, replicação e tratamento de falhas parciais. Os exemplos recorrem exclusivamente a dados fictícios; não foi feito levantamento empírico numa universidade específica.
+
+2. PROBLEMA E JUSTIFICAÇÃO
+Problema: Como controlar o acesso a documentos universitários partilhados entre departamentos e, simultaneamente, reduzir a dependência de um único nó de armazenamento, mantendo integridade e rastreabilidade?
+Riscos considerados (não factos comprovados sobre uma instituição): dispersão dos ficheiros, acessos indevidos, versões divergentes, indisponibilidade por falha de armazenamento e auditoria insuficiente.
+Justificação académica: os riscos permitem demonstrar o papel de uma arquitetura distribuída em vez de apresentar o projeto como mero armazenamento de ficheiros. A replicação enfrenta uma falha isolada de nó de armazenamento; a autorização limita acesso; SHA-256 ajuda a detetar alterações; auditoria permite reconstruir operações relevantes.
+
+3. QUESTÃO DE INVESTIGAÇÃO
+Como desenvolver e avaliar um sistema distribuído que permita a partilha segura de documentos entre departamentos universitários, aplicando autenticação, autorização, replicação de ficheiros, integridade e auditoria, e mantendo o descarregamento perante a falha isolada de um nó de armazenamento?
+
+4. HIPÓTESE / TESE A AVALIAR
+Se uma API aplicar permissões por documento e departamento, preservar metadados e replicar cada documento em dois nós independentes, então o sistema poderá permitir acessos controlados e recuperar um ficheiro íntegro quando apenas um dos nós estiver indisponível, desde que a API, a base de dados e a outra réplica permaneçam disponíveis. [PROPOSTA] A hipótese só deve ser considerada sustentada após testes integrados completos; nesta data o ensaio de failover está pendente.
+
+5. OBJETIVOS
+Objetivo geral: desenvolver e avaliar um protótipo distribuído para partilha documental universitária com acesso controlado, replicação, integridade e auditoria.
+Objetivos específicos:
+O1. Conceber arquitetura cliente–servidor com API, PostgreSQL e dois nós de armazenamento.
+O2. Implementar autenticação e permissões por utilizador e departamento.
+O3. Disponibilizar envio, listagem, partilha, descarregamento, revogação e eliminação controlada.
+O4. Replicar os ficheiros e permitir fallback para uma cópia íntegra.
+O5. Detetar corrupção por SHA-256 e registar eventos de auditoria.
+O6. Gerir estados de operações distribuídas e recuperação de falhas parciais.
+O7. Avaliar os mecanismos por testes de integração e cenários controlados de falha.
+
+6. ÂMBITO E DELIMITAÇÕES
+Inclusões: demonstração institucional com Registo Académico, Direcção Pedagógica, RH e Finanças; documentos fictícios; API + dois nós; controlo de acesso; testes de autorização, replicação, integridade e failover.
+Exclusões: gestão de matrículas, pagamentos, notas oficiais, certificação de segurança, exploração em produção, replicação entre cidades, alta disponibilidade da API/PostgreSQL, proteção contra todas as formas de falha e utilização de dados pessoais reais.
+O servidor de aplicação e PostgreSQL continuam pontos únicos de falha. Duas cópias NÃO substituem backups independentes nem garantem disponibilidade absoluta.
+
+7. FUNDAMENTAÇÃO TEÓRICA (CONCEITOS A EXPLICAR NO RELATÓRIO)
+7.1 Sistema distribuído: vários processos/nós cooperam por rede e podem falhar de maneira independente.
+7.2 Arquitetura cliente–servidor: portal envia solicitações à API, que coordena base de dados e armazenamento.
+7.3 Passagem de mensagens: as operações entre serviços utilizam requisições HTTP sobre TLS.
+7.4 Transparência de localização/replicação: o utilizador não escolhe nem conhece o nó físico da cópia.
+7.5 Autenticação versus autorização: identidade comprovada por credenciais/JWT não concede acesso universal aos documentos; as ACLs são verificadas por recurso.
+7.6 Integridade: SHA-256 permite comparar o ficheiro recuperado com o resumo registado, mas não equivale por si só a uma assinatura digital nem cifra conteúdo.
+7.7 Replicação versus backup: réplicas melhoram disponibilidade sob falha isolada; backups separados mitigam eliminação/corrupção compartilhada.
+7.8 Tolerância a falhas e consistência: a falha parcial de um nó não deve deixar um documento indevidamente disponível nem apresentar sucesso sem confirmação.
+7.9 Interoperabilidade sintática: API HTTP/JSON com contrato OpenAPI; interoperabilidade semântica/pragmática entre sistemas universitários independentes exigiria mapeamentos e integração adicional.
+7.10 Concorrência: uploads e acessos coexistem; estados persistentes e operações idempotentes limitam inconsistências, mas requerem testes reais.
+Base do enquadramento: conteúdos das Aulas 1, 2 e 3 e fichas de exercícios da disciplina, sem atribuir-lhes testes ou funcionalidades que não documentam.
+
+PARTE B — SISTEMA DESENVOLVIDO E ARQUITETURA
+
+8. TECNOLOGIAS E COMPONENTES [CÓDIGO]
+- Backend e API: Python 3.12 no contentor, FastAPI e Uvicorn.
+- Portal: HTML, CSS e JavaScript servidos pela API (não React na implementação atual).
+- Persistência: PostgreSQL 16 Alpine.
+- Autenticação: Argon2 para palavras-passe; JWT assinado com RS256; controlo de expiração/revogação.
+- Segurança: HTTPS/TLS local com certificados gerados para laboratório; autenticação por credenciais de serviço nos nós; SHA-256 para verificação de ficheiros.
+- Orquestração: Docker Compose com serviços postgres, api, node_a, node_b e volumes persistentes.
+- Testes: pytest; documentação API em /docs.
+
+9. ARQUITETURA LÓGICA [CÓDIGO]
+Portal HTML/CSS/JavaScript → API FastAPI ↔ PostgreSQL (contas, departamentos, ACL, documentos, réplicas, auditoria)
+                                    ├── HTTPS → Node A (armazenamento persistente)
+                                    └── HTTPS → Node B (armazenamento persistente)
+A porta da API para o computador anfitrião é 127.0.0.1:8000; os nós usam 8001/8002; a base PostgreSQL não está publicada no host. Os componentes executam-se em contentores isolados e comunicam na rede criada pelo Docker Compose, mas no mesmo computador físico. Não afirmar distribuição geográfica.
+
+10. MODELO DE DADOS [CÓDIGO]
+As tabelas documentadas no projeto são: departments; users; documents; document_replicas; document_shares; department_shares; audit_logs; revoked_tokens; login_limits.
+Ligação conceptual: users → departments; documents → proprietário; shares → documento + destinatário; replicas → documento + node_id + estado; audit_logs → utilizador/ação/recurso/resultado.
+As relações e índices devem ser mostrados em diagrama próprio a partir do ficheiro app/db.py antes de entregar a versão final.
+
+11. FLUXOS PRINCIPAIS [CÓDIGO; CONFIRMAÇÃO PARCIAL]
+11.1 Login: credenciais → validação → JWT → acesso ao portal.
+11.2 Upload: utilizador autorizado → conteúdo e SHA-256 → documento marcado uploading → envio aos Node A e B → atualização das réplicas → documento available apenas depois de confirmação de ambas as cópias.
+11.3 Listagem: SELECT restrito ao proprietário, a partilhas individuais válidas ou a partilhas do departamento do utilizador.
+11.4 Partilha: proprietário concede ACL ao utilizador (ou departamento). A visibilidade tem de ser validada em sessão de destinatário.
+11.5 Download: controlo de acesso → leitura em nó preferido → verificação de SHA-256 → tentativa no segundo nó se necessário → nova validação de acesso → entrega.
+11.6 Eliminação: estados lógicos e limpeza coordenada das réplicas. A robustez sob interrupções ainda precisa de teste integrado.
+11.7 Reparação: a rotina de reconciliação tenta restaurar uma réplica com base numa cópia verificada.
+
+12. REQUISITOS FUNCIONAIS (RF)
+RF01 Autenticar utilizadores.
+RF02 Gerir contas e departamentos.
+RF03 Atribuir papéis e permissões específicas.
+RF04 Enviar documentos fictícios autorizados.
+RF05 Listar e descarregar documentos autorizados.
+RF06 Partilhar com utilizadores e departamentos.
+RF07 Revogar permissões e impedir acessos futuros.
+RF08 Replicar ficheiros nos Node A e Node B.
+RF09 Descarregar pelo segundo nó quando o primeiro falhar.
+RF10 Validar integridade por SHA-256.
+RF11 Auditar operações e tentativas de acesso.
+RF12 Eliminar documentos com estados controlados.
+RF13 Identificar e reparar réplicas em falta ou corrompidas.
+
+13. REQUISITOS NÃO FUNCIONAIS (RNF)
+RNF01 Confidencialidade: autenticação, autorização, TLS e restrições de acesso.
+RNF02 Integridade: hash e validação de respostas de armazenamento.
+RNF03 Disponibilidade limitada: tolerância à falha isolada de um nó de armazenamento.
+RNF04 Auditabilidade: persistência de eventos, operadores e resultados.
+RNF05 Portabilidade: execução reproduzível com Docker Compose.
+RNF06 Manutenibilidade: módulos separados e documentação técnica.
+RNF07 Consistência: estados uploading, available, deleting, deleted e reconciliação.
+RNF08 Desempenho verificável: tempos de upload/download e de recuperação medidos, não presumidos.
+
+14. SEGURANÇA E LIMITAÇÕES [CÓDIGO]
+O protótipo usa Argon2, JWT RS256, TLS local e permissões por documento; não implica certificação de segurança para produção. Os ficheiros em volume não têm cifra em repouso demonstrada; o certificado TLS de laboratório não é emitido por CA pública; não há antimalware nem sistema de backups externo; réplicas e API dependem da mesma máquina física de demonstração. Nunca incluir .env, certificados privados ou palavras-passe nas entregas públicas.
+
+PARTE C — RESULTADOS COM EVIDÊNCIAS (ATÉ 12/10/2026)
+
+15. EVIDÊNCIAS DE EXECUÇÃO REAL [OBSERVADO]
+E01 — Python 3.14.7 e pip 26.2.1 instalados no Windows.
+E02 — Docker Engine 29.8.2, Docker Compose v5.5.1, WSL 3.0.1.0, backend Linux WSL 2 operacionais.
+E03 — bootstrap local criou credenciais/certificados para laboratório sem erros.
+E04 — docker compose up --build -d concluiu a construção; postgres healthy e api/node_a/node_b started.
+E05 — docker compose ps apresentou os quatro contentores Up, com postgres healthy.
+E06 — resposta de https://localhost:8000/health e curl.exe -k: {"status":"ok","database":"connected"}.
+E07 — interface web aberta no navegador e sessão de administrador visualizada.
+E08 — comando python -m app.create_admin criou o administrador; script python -m scripts.seed_demo criou quatro contas fictícias e departamentos.
+E09 — a sessão 'registo' mostrou o documento #3, 'pauta_ficticia.txt', proprietário 'registo', origem 'Registo Académico'. A interface mostrou «Documento #3 replicado nos dois nós».
+E10 — a verificação de visibilidade do documento partilhado na conta 'direccao' NÃO foi concluída com sucesso: o utilizador reportou que o documento não aparecia. Ainda não está identificado se a autorização foi realmente gravada, se o botão foi utilizado corretamente, se a listagem não foi atualizada ou se existe defeito de aplicação.
+
+16. TESTES AUTOMATIZADOS [TESTE LOCAL]
+O pacote da versão melhorada contém relatório de 19 casos pytest aprovados na preparação da entrega anterior. Abrange módulos de autenticação, nós, endpoints e simulação isolada de reconciliação. Não confundir esses 19 casos locais com uma suíte integrada de PostgreSQL, Docker e portal em navegador. Na máquina do grupo, o arranque e um upload foram observados, mas ainda não houve execução registada do comando integrado scripts/smoke_test.py.
+
+17. MATRIZ DE VALIDAÇÃO ATUAL
+T01 Infraestrutura em contentores: CONFIRMADO (docker compose ps).
+T02 API + PostgreSQL: CONFIRMADO (/health).
+T03 Criação de administrador e contas: CONFIRMADO (terminal).
+T04 Login pelo portal: CONFIRMADO (captura da sessão).
+T05 Upload do documento #3 pela conta registo: CONFIRMADO (captura).
+T06 Dois nós receberam efetivamente a cópia #3: NÃO VERIFICADO DIRETAMENTE (apenas resposta positiva da interface).
+T07 Partilha individual para direccao: PENDENTE / INCIDENTE A DIAGNOSTICAR.
+T08 Acesso negado para rh: PENDENTE.
+T09 Revogação de autorização: PENDENTE.
+T10 Download sob falha do Node A (fallback Node B): PENDENTE.
+T11 Regeneração da segunda réplica após recuperação: PENDENTE.
+T12 Alteração intencional e deteção de hash divergente: PENDENTE.
+T13 Auditoria consultada com exemplos reais: PENDENTE.
+T14 Teste integrado automatizado de ponta a ponta: PENDENTE.
+
+18. PLANO DE TESTES FINAIS E EVIDÊNCIAS
+- Verificar e corrigir a partilha de #3: autenticar como registo, confirmar retorno de POST /documents/3/share e GET /documents como direccao; recolher status HTTP, logs API e captura sem credenciais.
+- Autorização negativa: entrar como rh, verificar invisibilidade e tentativa de GET /documents/3/download bloqueada.
+- Replicação: consultar GET /admin/replicas como admin e confrontar estados de ambos os nós.
+- Failover: docker compose stop node_a; descarregar como utilizador autorizado; capturar sucesso/erro; docker compose start node_a; reconciliar e confirmar duas réplicas.
+- Integridade: ficheiro de laboratório descartável, hash antes/depois, teste com cópia corrompida e cópia íntegra.
+- Auditoria: confirmar eventos de login/upload/share/download/denied.
+- Medir: latência de upload/download em 10 repetições; taxa de sucesso de descargas; recuperação da réplica; CPU/memória opcional; preencher tabelas só com valores observados.
+- Executar: docker compose exec api python -m scripts.smoke_test --base https://api:8000 (verificar ajuda/argumentos antes de executar, para não inventar sintaxe), documentar saída e possíveis alterações de dados fictícios.
+- Capturas sugeridas: arquitetura/containers; /health; portal/admin; upload #3; concessão e receção da partilha; bloqueio de RH; falha do nó e fallback; estados de réplicas; auditoria; tabela de tempos.
+
+PARTE D — ESTRUTURA DO RELATÓRIO CIENTÍFICO
+
+19. ÍNDICE PROPOSTO
+Elementos pré-textuais: capa (instituição, título, disciplina, docente, autores/turma, cidade/data), resumo (150–250 palavras), palavras-chave (3–5), índice.
+1 Introdução e contextualização.
+2 Problema, justificação, pergunta, hipótese e objetivos.
+3 Fundamentação teórica: sistemas distribuídos, arquiteturas cliente–servidor, comunicação por mensagens, transparência, segurança, replicação, tolerância a falhas, integridade, concorrência e auditoria.
+4 Metodologia: abordagem incremental/prototipagem, ambiente, dados fictícios, critérios de verificação.
+5 Especificação: atores, casos de uso, RF/RNF, diagramas UML e arquitetura.
+6 Implementação: tecnologias, serviços, base de dados, endpoints, autenticação, ACL, upload, replicação, reparação e interface.
+7 Testes e resultados: matriz T01–T14, capturas e métricas reais, comparação entre esperado e observado.
+8 Discussão: relação com objetivos, falhas parciais, compromissos técnicos e limites do protótipo.
+9 Conclusões e trabalhos futuros: responder à pergunta apenas com evidência confirmada.
+Referências; anexos (screenshots, comandos, exemplos de API, excertos de logs SEM segredos).
+
+20. RESUMO PROVISÓRIO DO RELATÓRIO
+Este trabalho apresenta o SecureShare, um protótipo de sistema distribuído concebido para a partilha controlada de documentos entre departamentos universitários. A solução combina uma API FastAPI, base de dados PostgreSQL, interface web e dois nós independentes de armazenamento, utilizando autenticação por tokens, autorização por utilizador/departamento, replicação de ficheiros, verificação de integridade e auditoria. O desenvolvimento foi organizado em módulos e executado num ambiente Docker Compose. Os ensaios iniciais confirmaram o arranque dos quatro contentores, a comunicação entre API e base de dados, a criação de contas institucionais e o envio de um documento fictício pelo Registo Académico. A confirmação da partilha entre departamentos, o acesso negado, o ensaio de failover e a recolha de métricas permanecem em curso. Por isso, os resultados atuais demonstram a operacionalização inicial da infraestrutura, mas não permitem ainda concluir pela validação integral da tolerância a falhas ou de todas as regras de autorização. O trabalho permite relacionar a arquitetura distribuída com problemas concretos de gestão documental e estabelece uma estratégia de avaliação reproduzível.
+Palavras-chave: sistemas distribuídos; segurança; partilha documental; replicação; controlo de acesso.
+
+21. REFERÊNCIAS INICIAIS A CONFERIR E FORMATAR
+- Sambo, S. (2026). Sistemas Distribuídos e Paralelos — Aulas 1, 2 e 3. Materiais de apoio, ISUTC.
+- Kshemkalyani, A. D., & Singhal, M. Distributed Computing: Principles, Algorithms, and Systems. Cambridge University Press. (Confirmar edição/ano usados.)
+- Coulouris, G., Dollimore, J., Kindberg, T. Distributed Systems: Concepts and Design. (Confirmar edição completa.)
+- Docker Documentation. Docker Compose. Documentação técnica consultada para execução.
+- FastAPI Documentation. Documentação de APIs e OpenAPI.
+- PostgreSQL Documentation. Transações e esquema de dados.
+A lista é orientadora: conferir obras realmente consultadas, dados bibliográficos e estilo requerido pelo docente; não fingir citações de fontes não lidas.
+
+PARTE E — SLIDESHOW DE DEFESA (13 SLIDES, 12–15 MIN + DEMONSTRAÇÃO)
+
+22. ROTEIRO DE SLIDES
+Slide 1 — Capa: SecureShare; tema, instituição, grupo, docente e data (preencher autoria real).
+Slide 2 — Contexto universitário: documentos que circulam entre Registo, Direcção, RH e Finanças.
+Slide 3 — Problema: dispersão, autorização inconsistente, falha de nó e auditoria (riscos hipotéticos).
+Slide 4 — Pergunta/objetivos/tese: pergunta de investigação, objetivo geral e hipótese verificável.
+Slide 5 — Fundamentos teóricos: sistemas distribuídos, mensagens, transparência, autorização, falhas e consistência.
+Slide 6 — Arquitetura: portal → API ↔ PostgreSQL; API → Node A e Node B; rede Compose e coordenação.
+Slide 7 — Modelo de dados: users, departments, documents, shares, replicas e audit.
+Slide 8 — Segurança: Argon2, JWT RS256, HTTPS local, ACL documental, SHA-256 e limites do protótipo.
+Slide 9 — Replicação/consistência: uploading → available, dois nós, fallback e reparação.
+Slide 10 — Resultados confirmados: containers Up, /health connected, login admin, contas fictícias e upload #3.
+Slide 11 — Evidência visual do primeiro upload: imagem real do documento #3 enviado por registo.
+Slide 12 — Testes pendentes: partilha com Direcção (incidente), RH sem acesso, failover, reparação, auditoria, métricas.
+Slide 13 — Conclusão provisória e próximo passo: responder à tese só depois dos testes.
+
+23. DEMONSTRAÇÃO RECOMENDADA NA DEFESA (APÓS CORRIGIR PARTILHA)
+A. docker compose ps mostra API, PostgreSQL, Node A e Node B.
+B. GET /health mostra base de dados connected.
+C. Registo Académico inicia sessão e envia uma pauta fictícia.
+D. Registo concede leitura à Direcção Pedagógica; esta descarrega.
+E. RH tenta aceder sem permissão e recebe recusa.
+F. Admin consulta estado das réplicas; Node A é parado.
+G. Direcção descarrega do Node B; Node A volta; reparação reconstitui redundância.
+H. Auditoria confirma operação; apresentar tempos medidos.
+Evitar exibir passwords, tokens, ficheiro .env e chaves durante o projector.
+
+24. COMO CONCLUIR A TESE HONESTAMENTE
+ANTES dos testes finais: 'O protótipo demonstrou a execução coordenada dos serviços, o acesso à base de dados e o envio de ficheiros. A partilha entre departamentos e a recuperação de falhas encontram-se em validação.'
+APÓS passar todos os testes: 'Nos cenários testados, o sistema aplicou permissões e manteve o descarregamento perante a falha isolada do Node A, utilizando a réplica íntegra no Node B; não foi demonstrada alta disponibilidade da API nem do PostgreSQL.'
+Se algum teste falhar, registar o resultado e apresentar correção/limitação, não declarar êxito fictício.
+
+25. AÇÕES PENDENTES ANTES DA ENTREGA
+[ ] Diagnosticar autorização individual de documento #3 para direccao.
+[ ] Executar e guardar resultado do smoke test integrado.
+[ ] Comprovar diretamente estados de ambas as réplicas.
+[ ] Realizar acesso negado, revogação, failover e reparação.
+[ ] Tirar capturas definitivas sem senhas nem dados pessoais.
+[ ] Medir resultados e completar gráficos/tabelas sem inventar valores.
+[ ] Confirmar nomes dos autores, turma, docente, data, normas e duração permitida.
+[ ] Atualizar conclusão com a resposta validada à questão de investigação.
+[ ] Rever referências bibliográficas e atribuição das figuras.
+
+DOCUMENTOS DE APOIO UTILIZADOS
+- Texto original 'Proposta Definitiva do Trabalho Prático' fornecido pelo grupo.
+- README.md, DEFESA_E_TESTES.md, TEST_RESULTS.md, SECURITY.md e código-fonte do SecureShare Universitário v1.0.
+- Histórico de execução do projeto em PowerShell, Docker, navegador e capturas enviados nesta conversa.
+- Slides e fichas disponibilizados pelo docente da disciplina.
+
+FIM DO DOCUMENTO-MESTRE ATUALIZADO

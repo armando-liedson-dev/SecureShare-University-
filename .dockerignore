@@ -1,0 +1,11 @@
+.env
+.venv/
+keys/
+certs/
+storage/
+.git/
+__pycache__/
+.pytest_cache/
+*.zip
+*.bak
+tests/

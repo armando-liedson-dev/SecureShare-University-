@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SecureShare | Universidade</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo">S</span><div><strong>SecureShare</strong><small>Partilha documental universitária</small></div></div>
+    <div id="identity" class="identity" hidden><span id="who"></span><button id="signout" class="subtle">Terminar sessão</button></div>
+  </header>
+  <main>
+    <section id="login-screen" class="login-card panel">
+      <p class="eyebrow">Acesso institucional</p>
+      <h1>Documentos protegidos, colaboração simples.</h1>
+      <p class="muted">Entre com a conta atribuída pelo administrador da universidade.</p>
+      <form id="login-form" class="stack">
+        <label>Utilizador<input id="login-user" name="username" autocomplete="username" required maxlength="64"></label>
+        <label>Palavra-passe<input id="login-pass" name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Entrar</button>
+      </form>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="intro"><div><p class="eyebrow">Painel de gestão</p><h1>Documentos e partilhas</h1><p class="muted">Os ficheiros só são visíveis aos seus destinatários autorizados.</p></div><button id="refresh" class="subtle">Atualizar</button></div>
+      <div class="columns">
+        <section class="panel"><h2>Enviar documento</h2><p class="muted">PDF, TXT, CSV ou Office. Máximo 20 MiB.</p>
+          <form id="upload-form" class="stack"><label>Selecionar ficheiro<input name="file" type="file" accept=".pdf,.txt,.csv,.docx,.xlsx,.pptx" required></label><button type="submit">Guardar nos dois nós</button></form>
+        </section>
+        <section class="panel"><h2>Partilhar documento</h2>
+          <form id="share-user-form" class="stack"><label>Identificador do documento<input name="document" type="number" min="1" required></label><label>Nome do destinatário<input name="username" required></label><button type="submit">Autorizar utilizador</button></form>
+          <hr><form id="share-dept-form" class="stack"><label>Identificador do documento<input name="document" type="number" min="1" required></label><label>Departamento<select id="share-dept" name="department" required></select></label><button type="submit" class="subtle">Autorizar departamento</button></form>
+          <hr><details><summary>Revogar partilha individual ou departamental</summary>
+          <form id="revoke-user-form" class="stack secondary-form"><label>Documento<input name="document" type="number" min="1" required></label><label>Utilizador<input name="username" required></label><button class="subtle" type="submit">Revogar utilizador</button></form>
+          <form id="revoke-dept-form" class="stack secondary-form"><label>Documento<input name="document" type="number" min="1" required></label><label>Departamento<select id="revoke-dept" name="department" required></select></label><button type="submit" class="subtle">Revogar departamento</button></form>
+          </details>
+        </section>
+      </div>
+      <section class="panel documents"><div class="panel-heading"><h2>Documentos disponíveis</h2><span id="document-count" class="small"></span></div><div class="scroll"><table><thead><tr><th>Documento</th><th>Proprietário</th><th>Origem</th><th>Tamanho</th><th>Ações</th></tr></thead><tbody id="document-rows"></tbody></table></div></section>
+      <section class="panel admin" id="admin-panel" hidden>
+        <h2>Administração universitária</h2><div class="columns">
+          <form id="department-form" class="stack"><h3>Novo departamento</h3><label>Nome<input name="name" maxlength="100" required></label><button type="submit">Criar departamento</button></form>
+          <form id="user-form" class="stack"><h3>Novo utilizador</h3><label>Nome de utilizador<input name="username" pattern="[a-zA-Z0-9_.-]+" required></label><label>Palavra-passe (mínimo 12 caracteres)<input name="password" type="password" minlength="12" required></label><label>Departamento<select id="user-dept" name="department"></select></label><label>Perfil<select name="role"><option value="user">Funcionário</option><option value="admin">Administrador</option></select></label><button type="submit">Criar utilizador</button></form>
+        </div><div class="admin-actions"><button id="reconcile" class="subtle">Verificar / reparar réplicas</button><button id="audit" class="subtle">Consultar auditoria</button><button id="replica-status" class="subtle">Estado das réplicas</button><a href="/docs" rel="noopener" target="_blank">Documentação da API ↗</a></div><pre id="admin-output" aria-live="polite"></pre>
+      </section>
+    </section>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </main>
+  <footer>SecureShare · Demonstração académica · Utilizar apenas documentos fictícios</footer>
+</body>
+</html>
